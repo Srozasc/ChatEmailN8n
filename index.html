@@ -3,160 +3,225 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente de Email</title>
+    <title>Asistente de Email con Webhook</title>
     <style>
-        /* --- Importación de Fuentes --- */
+        /* --- ESTILOS GENERALES (SIN CAMBIOS) --- */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+        :root { --color-primario: #007BFF; --color-secundario: #0056b3; --color-texto: #333; --color-fondo: #f4f7f6; --color-blanco: #ffffff; --sombra-suave: 0 4px 15px rgba(0, 0, 0, 0.1); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background-color: var(--color-fondo); color: var(--color-texto); line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh; }
+        header { background: linear-gradient(90deg, var(--color-primario), var(--color-secundario)); color: var(--color-blanco); text-align: center; padding: 4rem 1rem; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
+        header h1 { font-size: 2.8rem; font-weight: 600; margin-bottom: 0.5rem; }
+        header p { font-size: 1.2rem; font-weight: 300; opacity: 0.9; }
+        main { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; }
+        .card { background: var(--color-blanco); border-radius: 15px; box-shadow: var(--sombra-suave); max-width: 800px; width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 2.5rem; transition: transform 0.3s ease; }
+        .card:hover { transform: translateY(-5px); }
+        .card svg { max-width: 120px; margin-bottom: 1.5rem; color: var(--color-primario); }
+        .card h2 { font-size: 1.8rem; color: var(--color-primario); margin-bottom: 1rem; }
+        .card p { font-size: 1rem; max-width: 600px; }
+        .card p strong { color: var(--color-secundario); }
+        footer { text-align: center; padding: 1.5rem; color: #aaa; font-size: 0.9rem; }
+        @media (max-width: 768px) { header { padding: 3rem 1rem; } header h1 { font-size: 2.2rem; } .card { padding: 2rem; } .card h2 { font-size: 1.5rem; } }
 
-        /* --- Estilos Generales y Reset --- */
-        :root {
-            --color-primario: #007BFF;
-            --color-secundario: #0056b3;
-            --color-texto: #333;
-            --color-fondo: #f4f7f6;
-            --color-blanco: #ffffff;
-            --sombra-suave: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--color-fondo);
-            color: var(--color-texto);
-            line-height: 1.6;
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* --- Encabezado --- */
-        header {
-            background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
-            color: var(--color-blanco);
-            text-align: center;
-            padding: 4rem 1rem;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-        }
-
-        header h1 {
-            font-size: 2.8rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        header p {
-            font-size: 1.2rem;
-            font-weight: 300;
-            opacity: 0.9;
-        }
-
-        /* --- Contenido Principal --- */
-        main {
-            flex-grow: 1;
+        /* --- NUEVOS ESTILOS PARA EL CHAT --- */
+        #chat-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--color-primario);
+            border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: transform 0.2s ease;
         }
-
-        .card {
-            background: var(--color-blanco);
+        #chat-bubble:hover { transform: scale(1.1); }
+        #chat-bubble svg { color: white; width: 32px; height: 32px; }
+        
+        #chat-window {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 350px;
+            max-width: 90%;
+            height: 500px;
+            background: white;
             border-radius: 15px;
             box-shadow: var(--sombra-suave);
-            max-width: 800px;
-            width: 100%;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 2.5rem;
+            overflow: hidden;
+            transform: scale(0);
+            transform-origin: bottom right;
             transition: transform 0.3s ease;
         }
+        #chat-window.open { transform: scale(1); }
         
-        .card:hover {
-            transform: translateY(-5px);
+        #chat-header {
+            background: var(--color-primario);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
         }
 
-        .card img {
-            max-width: 120px;
-            margin-bottom: 1.5rem;
+        #chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
         }
-
-        .card h2 {
-            font-size: 1.8rem;
-            color: var(--color-primario);
-            margin-bottom: 1rem;
+        .message {
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            max-width: 80%;
+            line-height: 1.4;
         }
-
-        .card p {
-            font-size: 1rem;
-            max-width: 600px;
+        .user-message {
+            background-color: #eef2f8;
+            color: var(--color-texto);
+            align-self: flex-end;
         }
-
-        .card p strong {
-            color: var(--color-secundario);
+        .bot-message {
+            background-color: var(--color-primario);
+            color: white;
+            align-self: flex-start;
         }
-
-        /* --- Pie de Página --- */
-        footer {
-            text-align: center;
-            padding: 1.5rem;
-            color: #aaa;
-            font-size: 0.9rem;
+        
+        #chat-input-container {
+            display: flex;
+            border-top: 1px solid #eee;
+            padding: 10px;
         }
-
-        /* --- Responsividad para móviles --- */
-        @media (max-width: 768px) {
-            header {
-                padding: 3rem 1rem;
-            }
-            header h1 {
-                font-size: 2.2rem;
-            }
-            .card {
-                padding: 2rem;
-            }
-            .card h2 {
-                font-size: 1.5rem;
-            }
+        #chat-input {
+            flex-grow: 1;
+            border: none;
+            padding: 10px;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+        }
+        #send-button {
+            border: none;
+            background: var(--color-primario);
+            color: white;
+            padding: 0 15px;
+            border-radius: 8px;
+            cursor: pointer;
         }
     </style>
 </head>
 <body>
-
+    <!-- CONTENIDO DE LA PÁGINA (SIN CAMBIOS) -->
     <header>
         <h1>Tu Asistente de Correo Electrónico</h1>
         <p>Redacta y envía tus emails de forma rápida y sencilla con nuestra ayuda.</p>
     </header>
-
     <main>
         <div class="card">
-            <img src="https://www.svgrepo.com/show/443333/mail-send.svg" alt="Icono de Enviar Email">
+            <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M21.57,11.36,13,2.79a1.53,1.53,0,0,0-2,0L2.43,11.36a1.5,1.5,0,0,0,1,2.54H6v5a2,2,0,0,0,2,2h8a2,2,0,0,0,2-2V13.9H19.5A1.5,1.5,0,0,0,21.57,11.36ZM12,5.1,16.45,9.55H7.55Zm4,13.8H8V11.9h8Z" opacity="0.4"/><path d="M21.94,4.26,14.66.33a3.53,3.53,0,0,0-4.32,0L3.06,4.26a1.5,1.5,0,0,0-.81,2l.33.66,1.44-1L12,1.3l8,4.65,1.44,1,.33-.66A1.5,1.5,0,0,0,21.94,4.26Z"/></svg>
             <h2>Crea tu Correo Electrónico en 3 Pasos</h2>
-            <p>
-                Nuestro asistente conversacional te guiará para redactar tu email. Solo necesitas proporcionar el <strong>destinatario</strong>, el <strong>asunto</strong> y el <strong>mensaje</strong>. ¡Inicia el chat en la esquina inferior derecha y nosotros nos encargamos del resto!
-            </p>
+            <p>Nuestro asistente conversacional te guiará para redactar tu email. Solo necesitas proporcionar el <strong>destinatario</strong>, el <strong>asunto</strong> y el <strong>mensaje</strong>. ¡Inicia el chat en la esquina inferior derecha y nosotros nos encargamos del resto!</p>
         </div>
     </main>
-
     <footer>
         <p>&copy; 2025 Asistente de Email | Todos los derechos reservados.</p>
     </footer>
 
-    <!-- CÓDIGO DEL WIDGET DE CHAT DE N8N INSERTADO -->
+    <!-- ===== NUEVA INTERFAZ DEL CHAT Y JAVASCRIPT ===== -->
+
+    <!-- La burbuja para abrir el chat -->
+    <div id="chat-bubble">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
+    </div>
+
+    <!-- La ventana del chat (oculta al inicio) -->
+    <div id="chat-window">
+        <div id="chat-header">Asistente de Email</div>
+        <div id="chat-messages">
+            <div class="message bot-message">Hola, ¿cómo puedo ayudarte a redactar tu email hoy?</div>
+        </div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
+            <button id="send-button">Enviar</button>
+        </div>
+    </div>
+
     <script>
-      window.n8nSettings = {
-        "chatUrl": "https://srozas.app.n8n.cloud/webhook/cacadfda-e40e-44da-b515-4f8490076007/chat",
-        "baseUrl": "https://srozas.app.n8n.cloud"
-      }
+        // ---- CONFIGURACIÓN ----
+        // ⬇️ PEGA AQUÍ LA URL DE TU WEBHOOK DE PRODUCCIÓN DE N8N ⬇️
+        const N8N_WEBHOOK_URL = 'https://srozas.app.n8n.cloud/webhook/TU_URL_AQUI'; 
+
+        // ---- LÓGICA DEL CHAT ----
+        const chatBubble = document.getElementById('chat-bubble');
+        const chatWindow = document.getElementById('chat-window');
+        const messagesContainer = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Abrir/Cerrar la ventana de chat
+        chatBubble.addEventListener('click', () => {
+            chatWindow.classList.toggle('open');
+        });
+
+        // Función para enviar el mensaje
+        const sendMessage = async () => {
+            const userMessage = chatInput.value.trim();
+            if (userMessage === '') return;
+
+            // 1. Mostrar el mensaje del usuario en la pantalla
+            addMessageToUI(userMessage, 'user-message');
+            chatInput.value = '';
+
+            try {
+                // 2. Enviar el mensaje al webhook de n8n
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: userMessage }) // Enviamos { "message": "..." }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error en la respuesta de n8n.');
+                }
+
+                // 3. Recibir la respuesta y mostrarla
+                const data = await response.json();
+                const botReply = data.reply; // Esperamos recibir { "reply": "..." }
+                
+                if (botReply) {
+                    addMessageToUI(botReply, 'bot-message');
+                } else {
+                    addMessageToUI('Lo siento, no he podido obtener una respuesta.', 'bot-message');
+                }
+
+            } catch (error) {
+                console.error('Error al conectar con n8n:', error);
+                addMessageToUI('Ha ocurrido un error de conexión. Inténtalo de nuevo.', 'bot-message');
+            }
+        };
+
+        // Función auxiliar para añadir mensajes a la UI
+        const addMessageToUI = (text, className) => {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', className);
+            messageElement.textContent = text;
+            messagesContainer.appendChild(messageElement);
+            // Hacer scroll hasta el último mensaje
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+
+        // Event Listeners para enviar
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        });
     </script>
-    <script src="https://srozas.app.n8n.cloud/chat/index.js"></script>
-    
 </body>
 </html>
