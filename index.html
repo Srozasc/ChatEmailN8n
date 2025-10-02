@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente de Email</title>
+    <style>
+        /* --- Importación de Fuentes --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+        /* --- Estilos Generales y Reset --- */
+        :root {
+            --color-primario: #007BFF;
+            --color-secundario: #0056b3;
+            --color-texto: #333;
+            --color-fondo: #f4f7f6;
+            --color-blanco: #ffffff;
+            --sombra-suave: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* --- Encabezado --- */
+        header {
+            background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
+            color: var(--color-blanco);
+            text-align: center;
+            padding: 4rem 1rem;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        /* --- Contenido Principal --- */
+        main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .card {
+            background: var(--color-blanco);
+            border-radius: 15px;
+            box-shadow: var(--sombra-suave);
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2.5rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card img {
+            max-width: 120px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card h2 {
+            font-size: 1.8rem;
+            color: var(--color-primario);
+            margin-bottom: 1rem;
+        }
+
+        .card p {
+            font-size: 1rem;
+            max-width: 600px;
+        }
+
+        .card p strong {
+            color: var(--color-secundario);
+        }
+
+        /* --- Pie de Página --- */
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        /* --- Responsividad para móviles --- */
+        @media (max-width: 768px) {
+            header {
+                padding: 3rem 1rem;
+            }
+            header h1 {
+                font-size: 2.2rem;
+            }
+            .card {
+                padding: 2rem;
+            }
+            .card h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Tu Asistente de Correo Electrónico</h1>
+        <p>Redacta y envía tus emails de forma rápida y sencilla con nuestra ayuda.</p>
+    </header>
+
+    <main>
+        <div class="card">
+            <img src="https://www.svgrepo.com/show/443333/mail-send.svg" alt="Icono de Enviar Email">
+            <h2>Crea tu Correo Electrónico en 3 Pasos</h2>
+            <p>
+                Nuestro asistente conversacional te guiará para redactar tu email. Solo necesitas proporcionar el <strong>destinatario</strong>, el <strong>asunto</strong> y el <strong>mensaje</strong>. ¡Inicia el chat en la esquina inferior derecha y nosotros nos encargamos del resto!
+            </p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 Asistente de Email | Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- CÓDIGO DEL WIDGET DE CHAT DE N8N INSERTADO -->
+    <script>
+      window.n8nSettings = {
+        "chatUrl": "https://srozas.app.n8n.cloud/webhook/cacadfda-e40e-44da-b515-4f8490076007/chat",
+        "baseUrl": "https://srozas.app.n8n.cloud"
+      }
+    </script>
+    <script src="https://srozas.app.n8n.cloud/chat/index.js"></script>
+    
+</body>
+</html>
