@@ -151,10 +151,9 @@
         </div>
     </div>
 
-    <script>
+        <script>
         // ---- CONFIGURACIÓN ----
-        // ⬇️ PEGA AQUÍ LA URL DE TU WEBHOOK DE PRODUCCIÓN DE N8N ⬇️
-        const N8N_WEBHOOK_URL = 'https://srozas.app.n8n.cloud/webhook/f3d1c6af-46dd-45fe-8f59-2b0e19be20e0'; 
+        const N8N_WEBHOOK_URL = 'URL_DE_TU_WEBHOOK_AQUI'; // ¡Asegúrate de que la URL correcta sigue aquí!
 
         // ---- LÓGICA DEL CHAT ----
         const chatBubble = document.getElementById('chat-bubble');
@@ -162,6 +161,19 @@
         const messagesContainer = document.getElementById('chat-messages');
         const chatInput = document.getElementById('chat-input');
         const sendButton = document.getElementById('send-button');
+
+        // ---- NUEVA LÓGICA PARA EL ID DE SESIÓN ----
+        // Función para obtener o crear el ID de sesión
+        const getSessionId = () => {
+            let sessionId = localStorage.getItem('chatSessionId');
+            if (!sessionId) {
+                // Si no existe, crea uno nuevo (un string aleatorio simple)
+                sessionId = Math.random().toString(36).substring(2, 15);
+                localStorage.setItem('chatSessionId', sessionId);
+            }
+            return sessionId;
+        };
+        const sessionId = getSessionId(); // Obtenemos el ID para usarlo en las peticiones
 
         // Abrir/Cerrar la ventana de chat
         chatBubble.addEventListener('click', () => {
@@ -173,25 +185,27 @@
             const userMessage = chatInput.value.trim();
             if (userMessage === '') return;
 
-            // 1. Mostrar el mensaje del usuario en la pantalla
             addMessageToUI(userMessage, 'user-message');
             chatInput.value = '';
 
             try {
-                // 2. Enviar el mensaje al webhook de n8n
+                // ---- CAMBIO IMPORTANTE AQUÍ ----
+                // Ahora enviamos tanto el mensaje como el ID de sesión
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: userMessage }) // Enviamos { "message": "..." }
+                    body: JSON.stringify({ 
+                        message: userMessage,
+                        sessionId: sessionId // Enviamos el ID de sesión
+                    })
                 });
 
                 if (!response.ok) {
                     throw new Error('Error en la respuesta de n8n.');
                 }
 
-                // 3. Recibir la respuesta y mostrarla
                 const data = await response.json();
-                const botReply = data.reply; // Esperamos recibir { "reply": "..." }
+                const botReply = data.reply;
                 
                 if (botReply) {
                     addMessageToUI(botReply, 'bot-message');
@@ -205,17 +219,14 @@
             }
         };
 
-        // Función auxiliar para añadir mensajes a la UI
         const addMessageToUI = (text, className) => {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', className);
             messageElement.textContent = text;
             messagesContainer.appendChild(messageElement);
-            // Hacer scroll hasta el último mensaje
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         };
 
-        // Event Listeners para enviar
         sendButton.addEventListener('click', sendMessage);
         chatInput.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
