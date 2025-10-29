@@ -23,7 +23,7 @@
         footer { text-align: center; padding: 1.5rem; color: #aaa; font-size: 0.9rem; }
         @media (max-width: 768px) { header { padding: 3rem 1rem; } header h1 { font-size: 2.2rem; } .card { padding: 2rem; } .card h2 { font-size: 1.5rem; } }
 
-        /* --- ESTILOS DEL CHAT (MODIFICADOS) --- */
+        /* --- ESTILOS DEL CHAT (SIN CAMBIOS) --- */
         #chat-bubble {
             position: fixed;
             bottom: 20px;
@@ -47,7 +47,6 @@
             position: fixed;
             bottom: 100px;
             right: 20px;
-            /* --- 1. TAMAÑO AMPLIADO --- */
             width: 450px; 
             height: 600px;
             max-width: 90%;
@@ -82,11 +81,10 @@
             padding: 10px 15px;
             border-radius: 20px;
             margin-bottom: 10px;
-            max-width: 85%; /* Un poco más de ancho para los mensajes */
+            max-width: 85%;
             line-height: 1.4;
-            word-wrap: break-word; /* Para que las palabras largas no rompan el layout */
+            word-wrap: break-word;
         }
-        /* --- 3. ESTILOS PARA ENLACES --- */
         .bot-message a {
             color: #ffffff;
             font-weight: 600;
@@ -107,9 +105,8 @@
             display: flex;
             border-top: 1px solid #eee;
             padding: 10px;
-            align-items: flex-end; /* Para alinear el botón correctamente con el textarea */
+            align-items: flex-end;
         }
-        /* --- 2. ESTILOS PARA EL TEXTAREA --- */
         #chat-input {
             flex-grow: 1;
             border: none;
@@ -117,20 +114,20 @@
             outline: none;
             font-family: 'Poppins', sans-serif;
             font-size: 1rem;
-            resize: none; /* Evita que el usuario cambie el tamaño manualmente */
+            resize: none;
             line-height: 1.5;
-            max-height: 120px; /* Límite para que no crezca indefinidamente */
+            max-height: 120px;
             overflow-y: auto;
         }
         #send-button {
             border: none;
             background: var(--color-primario);
             color: white;
-            padding: 10px 15px; /* Ajuste de padding */
+            padding: 10px 15px;
             border-radius: 8px;
             cursor: pointer;
             margin-left: 10px;
-            align-self: flex-end; /* Alinear el botón con la última línea del textarea */
+            align-self: flex-end;
         }
     </style>
 </head>
@@ -153,7 +150,7 @@
         <p>&copy; 2025 Asistente de Cartera Deteriorada BCI | Todos los derechos reservados.</p>
     </footer>
 
-    <!-- ===== INTERFAZ DEL CHAT Y JAVASCRIPT (MODIFICADOS) ===== -->
+    <!-- ===== INTERFAZ DEL CHAT Y JAVASCRIPT (SIN CAMBIOS EN HTML) ===== -->
 
     <div id="chat-bubble">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
@@ -165,7 +162,6 @@
             <div class="message bot-message">¡Hola! Soy tu asistente de cartera deteriorada. Puedo ayudarte con consultas de clientes por RUT, reglas de negocio o exportar datos. ¿En qué puedo ayudarte?</div>
         </div>
         <div id="chat-input-container">
-            <!-- --- 2. CAMBIADO DE INPUT A TEXTAREA --- -->
             <textarea id="chat-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
             <button id="send-button">Enviar</button>
         </div>
@@ -179,7 +175,7 @@
         const chatBubble = document.getElementById('chat-bubble');
         const chatWindow = document.getElementById('chat-window');
         const messagesContainer = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input'); // Ahora es un <textarea>
+        const chatInput = document.getElementById('chat-input');
         const sendButton = document.getElementById('send-button');
 
         const getSessionId = () => {
@@ -196,10 +192,8 @@
             chatWindow.classList.toggle('open');
         });
 
-        // --- 3. NUEVA FUNCIÓN PARA HACER LOS LINKS CLICKEABLES ---
         const linkify = (text) => {
             const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-            // Reemplaza las URLs encontradas con etiquetas <a>
             return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
         };
 
@@ -209,7 +203,6 @@
 
             addMessageToUI(userMessage, 'user-message');
             chatInput.value = '';
-            // Resetea la altura del textarea después de enviar
             chatInput.style.height = 'auto';
 
             try {
@@ -244,31 +237,26 @@
         const addMessageToUI = (text, className) => {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', className);
-            
-            // --- 3. MODIFICADO PARA USAR LA FUNCIÓN linkify ---
-            // Usamos innerHTML para que el navegador renderice las etiquetas <a>
             messageElement.innerHTML = linkify(text);
-
             messagesContainer.appendChild(messageElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         };
 
         sendButton.addEventListener('click', sendMessage);
 
-        // --- 2. LÓGICA MODIFICADA PARA EL TEXTAREA ---
+        // --- ÚNICO CAMBIO: LÓGICA CORREGIDA PARA EL SALTO DE LÍNEA ---
         chatInput.addEventListener('keydown', (event) => {
-            // Si se presiona Enter Y NO se presiona la tecla Ctrl, se envía el mensaje
-            if (event.key === 'Enter' && !event.ctrlKey) {
-                event.preventDefault(); // Previene el salto de línea por defecto
+            // Si se presiona Enter Y NO se presiona la tecla Shift, se envía el mensaje
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // Previene el salto de línea que haría Enter por defecto
                 sendMessage();
             }
-            // Si se presiona Ctrl + Enter, el textarea hará su acción por defecto: un salto de línea.
+            // Si se presiona Shift + Enter, el textarea hará su acción por defecto: un salto de línea.
         });
 
-        // Opcional pero recomendado: Auto-ajustar la altura del textarea al escribir
         chatInput.addEventListener('input', () => {
-            chatInput.style.height = 'auto'; // Resetea la altura
-            chatInput.style.height = `${chatInput.scrollHeight}px`; // Ajusta la altura al contenido
+            chatInput.style.height = 'auto';
+            chatInput.style.height = `${chatInput.scrollHeight}px`;
         });
     </script>
 </body>
