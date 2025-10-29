@@ -23,7 +23,7 @@
         footer { text-align: center; padding: 1.5rem; color: #aaa; font-size: 0.9rem; }
         @media (max-width: 768px) { header { padding: 3rem 1rem; } header h1 { font-size: 2.2rem; } .card { padding: 2rem; } .card h2 { font-size: 1.5rem; } }
 
-        /* --- NUEVOS ESTILOS PARA EL CHAT --- */
+        /* --- ESTILOS DEL CHAT (MODIFICADOS) --- */
         #chat-bubble {
             position: fixed;
             bottom: 20px;
@@ -38,6 +38,7 @@
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             transition: transform 0.2s ease;
+            z-index: 1000;
         }
         #chat-bubble:hover { transform: scale(1.1); }
         #chat-bubble svg { color: white; width: 32px; height: 32px; }
@@ -46,9 +47,10 @@
             position: fixed;
             bottom: 100px;
             right: 20px;
-            width: 350px;
+            /* --- 1. TAMAÑO AMPLIADO --- */
+            width: 450px; 
+            height: 600px;
             max-width: 90%;
-            height: 500px;
             background: white;
             border-radius: 15px;
             box-shadow: var(--sombra-suave);
@@ -58,6 +60,7 @@
             transform: scale(0);
             transform-origin: bottom right;
             transition: transform 0.3s ease;
+            z-index: 1000;
         }
         #chat-window.open { transform: scale(1); }
         
@@ -79,8 +82,15 @@
             padding: 10px 15px;
             border-radius: 20px;
             margin-bottom: 10px;
-            max-width: 80%;
+            max-width: 85%; /* Un poco más de ancho para los mensajes */
             line-height: 1.4;
+            word-wrap: break-word; /* Para que las palabras largas no rompan el layout */
+        }
+        /* --- 3. ESTILOS PARA ENLACES --- */
+        .bot-message a {
+            color: #ffffff;
+            font-weight: 600;
+            text-decoration: underline;
         }
         .user-message {
             background-color: #eef2f8;
@@ -97,26 +107,35 @@
             display: flex;
             border-top: 1px solid #eee;
             padding: 10px;
+            align-items: flex-end; /* Para alinear el botón correctamente con el textarea */
         }
+        /* --- 2. ESTILOS PARA EL TEXTAREA --- */
         #chat-input {
             flex-grow: 1;
             border: none;
             padding: 10px;
             outline: none;
             font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            resize: none; /* Evita que el usuario cambie el tamaño manualmente */
+            line-height: 1.5;
+            max-height: 120px; /* Límite para que no crezca indefinidamente */
+            overflow-y: auto;
         }
         #send-button {
             border: none;
             background: var(--color-primario);
             color: white;
-            padding: 0 15px;
+            padding: 10px 15px; /* Ajuste de padding */
             border-radius: 8px;
             cursor: pointer;
+            margin-left: 10px;
+            align-self: flex-end; /* Alinear el botón con la última línea del textarea */
         }
     </style>
 </head>
 <body>
-    <!-- CONTENIDO DE LA PÁGINA  -->
+    <!-- CONTENIDO DE LA PÁGINA (SIN CAMBIOS) -->
     <header>
         <h1>Asistente de Cartera Deteriorada BCI</h1>
         <p>Consulta información de clientes y reglas de cartera deteriorada de forma rápida y sencilla.</p>
@@ -134,26 +153,25 @@
         <p>&copy; 2025 Asistente de Cartera Deteriorada BCI | Todos los derechos reservados.</p>
     </footer>
 
-    <!-- ===== NUEVA INTERFAZ DEL CHAT Y JAVASCRIPT ===== -->
+    <!-- ===== INTERFAZ DEL CHAT Y JAVASCRIPT (MODIFICADOS) ===== -->
 
-    <!-- La burbuja para abrir el chat -->
     <div id="chat-bubble">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
     </div>
 
-    <!-- La ventana del chat (oculta al inicio) -->
     <div id="chat-window">
         <div id="chat-header">Asistente Cartera Deteriorada</div>
         <div id="chat-messages">
             <div class="message bot-message">¡Hola! Soy tu asistente de cartera deteriorada. Puedo ayudarte con consultas de clientes por RUT, reglas de negocio o exportar datos. ¿En qué puedo ayudarte?</div>
         </div>
         <div id="chat-input-container">
-            <input type="text" id="chat-input" placeholder="Escribe tu mensaje...">
+            <!-- --- 2. CAMBIADO DE INPUT A TEXTAREA --- -->
+            <textarea id="chat-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
             <button id="send-button">Enviar</button>
         </div>
     </div>
 
-        <script>
+    <script>
         // ---- CONFIGURACIÓN ----
         const N8N_WEBHOOK_URL = 'https://webhook-processor-production-ccde.up.railway.app/webhook/cardet-webhook'; 
 
@@ -161,43 +179,46 @@
         const chatBubble = document.getElementById('chat-bubble');
         const chatWindow = document.getElementById('chat-window');
         const messagesContainer = document.getElementById('chat-messages');
-        const chatInput = document.getElementById('chat-input');
+        const chatInput = document.getElementById('chat-input'); // Ahora es un <textarea>
         const sendButton = document.getElementById('send-button');
 
-        // ---- NUEVA LÓGICA PARA EL ID DE SESIÓN ----
-        // Función para obtener o crear el ID de sesión
         const getSessionId = () => {
             let sessionId = localStorage.getItem('chatSessionId');
             if (!sessionId) {
-                // Si no existe, crea uno nuevo (un string aleatorio simple)
                 sessionId = Math.random().toString(36).substring(2, 15);
                 localStorage.setItem('chatSessionId', sessionId);
             }
             return sessionId;
         };
-        const sessionId = getSessionId(); // Obtenemos el ID para usarlo en las peticiones
+        const sessionId = getSessionId();
 
-        // Abrir/Cerrar la ventana de chat
         chatBubble.addEventListener('click', () => {
             chatWindow.classList.toggle('open');
         });
 
-        // Función para enviar el mensaje
+        // --- 3. NUEVA FUNCIÓN PARA HACER LOS LINKS CLICKEABLES ---
+        const linkify = (text) => {
+            const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+            // Reemplaza las URLs encontradas con etiquetas <a>
+            return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+        };
+
         const sendMessage = async () => {
             const userMessage = chatInput.value.trim();
             if (userMessage === '') return;
 
             addMessageToUI(userMessage, 'user-message');
             chatInput.value = '';
+            // Resetea la altura del textarea después de enviar
+            chatInput.style.height = 'auto';
 
             try {
-                // Ahora enviamos tanto el mensaje como el ID de sesión
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         message: userMessage,
-                        sessionId: sessionId // Enviamos el ID de sesión
+                        sessionId: sessionId
                     })
                 });
 
@@ -223,16 +244,31 @@
         const addMessageToUI = (text, className) => {
             const messageElement = document.createElement('div');
             messageElement.classList.add('message', className);
-            messageElement.textContent = text;
+            
+            // --- 3. MODIFICADO PARA USAR LA FUNCIÓN linkify ---
+            // Usamos innerHTML para que el navegador renderice las etiquetas <a>
+            messageElement.innerHTML = linkify(text);
+
             messagesContainer.appendChild(messageElement);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         };
 
         sendButton.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keypress', (event) => {
-            if (event.key === 'Enter') {
+
+        // --- 2. LÓGICA MODIFICADA PARA EL TEXTAREA ---
+        chatInput.addEventListener('keydown', (event) => {
+            // Si se presiona Enter Y NO se presiona la tecla Ctrl, se envía el mensaje
+            if (event.key === 'Enter' && !event.ctrlKey) {
+                event.preventDefault(); // Previene el salto de línea por defecto
                 sendMessage();
             }
+            // Si se presiona Ctrl + Enter, el textarea hará su acción por defecto: un salto de línea.
+        });
+
+        // Opcional pero recomendado: Auto-ajustar la altura del textarea al escribir
+        chatInput.addEventListener('input', () => {
+            chatInput.style.height = 'auto'; // Resetea la altura
+            chatInput.style.height = `${chatInput.scrollHeight}px`; // Ajusta la altura al contenido
         });
     </script>
 </body>
