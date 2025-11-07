@@ -188,6 +188,34 @@
         };
         const sessionId = getSessionId();
 
+        // ---- Gestión de RUT en el frontend (contexto) ----
+        const RUT_REGEX = /\b(\d{1,2}\.?\d{3}\.?\d{3}[-]?[0-9kK])\b/g;
+
+        const normalizeRut = (r) => {
+            if (!r || typeof r !== 'string') return '';
+            let rut = r.replace(/[.\-]/g, '').toLowerCase();
+            if (rut.endsWith('k')) rut = rut.slice(0, -1) + 'K';
+            return rut;
+        };
+
+        const extractRut = (text) => {
+            try {
+                const match = (text || '').match(RUT_REGEX);
+                if (match && match[0]) return normalizeRut(match[0]);
+                return '';
+            } catch { return ''; }
+        };
+
+        let lastRut = localStorage.getItem('lastRut') || '';
+        const updateLastRutFromText = (text) => {
+            const rut = extractRut(text || '');
+            if (rut && rut.length >= 8) {
+                lastRut = rut;
+                localStorage.setItem('lastRut', lastRut);
+                console.log('RUT contextual actualizado:', lastRut);
+            }
+        };
+
         chatBubble.addEventListener('click', () => {
             chatWindow.classList.toggle('open');
         });
@@ -195,6 +223,40 @@
         const linkify = (text) => {
             const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
             return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+        };
+
+        // Función para descargar archivo desde Base64
+        const downloadFileFromBase64 = (base64Data, fileName, mimeType) => {
+            try {
+                // Convertir el Base64 a un array de bytes
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: mimeType });
+                
+                // Crear un enlace temporal y simular clic
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                
+                // Limpiar
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                console.log('Archivo descargado exitosamente:', fileName);
+            } catch (error) {
+                console.error('Error al descargar el archivo:', error);
+                addMessageToUI('❌ Error al descargar el archivo. Por favor, intenta nuevamente.', 'bot-message');
+            }
         };
 
         const sendMessage = async () => {
@@ -206,31 +268,89 @@
             chatInput.style.height = 'auto';
 
             try {
+                console.log('Enviando mensaje a n8n:', { message: userMessage, sessionId: sessionId });
+                console.log('URL del webhook:', N8N_WEBHOOK_URL);
+                
+                // Actualizar RUT contextual desde el mensaje del usuario
+                updateLastRutFromText(userMessage);
+
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
                         message: userMessage,
-                        sessionId: sessionId
+                        sessionId: sessionId,
+                        lastRut: lastRut
                     })
                 });
 
+                console.log('Respuesta recibida:', response.status, response.statusText);
+
                 if (!response.ok) {
-                    throw new Error('Error en la respuesta de n8n.');
+                    const errorText = await response.text();
+                    console.error('Error en la respuesta:', errorText);
+                    throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
 
-                const data = await response.json();
-                const botReply = data.output;
+                // Intentar parsear JSON de forma robusta (soporta respuestas vacías o texto)
+                let data;
+                try {
+                    const contentType = response.headers.get('Content-Type') || response.headers.get('content-type') || '';
+                    if (contentType.includes('application/json')) {
+                        data = await response.json();
+                    } else {
+                        const textBody = await response.text();
+                        try {
+                            data = textBody ? JSON.parse(textBody) : {};
+                        } catch (e) {
+                            // Si no es JSON, usar el texto como salida directa
+                            data = { output: textBody };
+                        }
+                    }
+                } catch (e) {
+                    // Fallback para respuestas sin cuerpo (p.ej. 204) o JSON inválido
+                    const textBody = await response.text().catch(() => '');
+                    console.warn('No se pudo parsear la respuesta como JSON. Cuerpo recibido:', textBody);
+                    addMessageToUI('❌ Error: la respuesta del servidor llegó vacía o con formato no válido. Intenta nuevamente.', 'bot-message');
+                    return;
+                }
+                console.log('Datos recibidos:', data);
+                // Intentar actualizar el RUT contextual desde la respuesta del backend
+                if (data && typeof data === 'object') {
+                    if (data.rut_cliente) updateLastRutFromText(String(data.rut_cliente));
+                    if (data.rut_from_context) updateLastRutFromText(String(data.rut_from_context));
+                    if (data.output) updateLastRutFromText(String(data.output));
+                }
                 
-                if (botReply) {
-                    addMessageToUI(botReply, 'bot-message');
+                // Verificar si la respuesta contiene un archivo para descargar
+                if (data.fileData && data.fileName) {
+                    console.log('Descargando archivo:', data.fileName);
+                    // Descargar el archivo automáticamente
+                    downloadFileFromBase64(
+                        data.fileData,
+                        data.fileName,
+                        data.mimeType || 'text/csv;charset=utf-8;'
+                    );
+                    
+                    // Mostrar mensaje de confirmación
+                    const confirmMessage = `✅ **Archivo descargado exitosamente**\n\n📋 **${data.fileName}**\n\nEl archivo se ha descargado en tu carpeta de descargas.`;
+                    addMessageToUI(confirmMessage, 'bot-message');
+                } else if (data.output) {
+                    // Es una respuesta normal del chatbot
+                    addMessageToUI(data.output, 'bot-message');
                 } else {
+                    console.warn('Respuesta sin output ni fileData:', data);
                     addMessageToUI('Lo siento, no he podido obtener una respuesta.', 'bot-message');
                 }
 
             } catch (error) {
                 console.error('Error al conectar con n8n:', error);
-                addMessageToUI('Ha ocurrido un error de conexión. Inténtalo de nuevo.', 'bot-message');
+                console.error('Detalles del error:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
+                addMessageToUI(`Ha ocurrido un error de conexión: ${error.message}. Inténtalo de nuevo.`, 'bot-message');
             }
         };
 
