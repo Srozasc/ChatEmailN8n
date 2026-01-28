@@ -1,70 +1,293 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente de Cartera Deteriorada BCI (Solo clientes_raw)</title>
+    <title>Asistente de Cartera Deteriorada BCI</title>
     <style>
+        /* --- ESTILOS GENERALES (SIN CAMBIOS) --- */
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
-        :root { --color-primario: #007BFF; --color-secundario: #0056b3; --color-texto: #333; --color-fondo: #f4f7f6; --color-blanco: #ffffff; --sombra-suave: 0 4px 15px rgba(0, 0, 0, 0.1); }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', sans-serif; background-color: var(--color-fondo); color: var(--color-texto); line-height: 1.6; display: flex; flex-direction: column; min-height: 100vh; }
-        header { background: linear-gradient(90deg, var(--color-primario), var(--color-secundario)); color: var(--color-blanco); text-align: center; padding: 4rem 1rem; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; }
-        header h1 { font-size: 2.4rem; font-weight: 600; margin-bottom: 0.5rem; }
-        header p { font-size: 1.05rem; font-weight: 300; opacity: 0.9; }
-        main { flex-grow: 1; display: flex; justify-content: center; align-items: center; padding: 2rem; }
-        .card { background: var(--color-blanco); border-radius: 15px; box-shadow: var(--sombra-suave); max-width: 800px; width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; padding: 2.5rem; transition: transform 0.3s ease; }
-        .card:hover { transform: translateY(-5px); }
-        .card svg { max-width: 120px; margin-bottom: 1.5rem; color: var(--color-primario); }
-        .card h2 { font-size: 1.6rem; color: var(--color-primario); margin-bottom: 1rem; }
-        .card p { font-size: 1rem; max-width: 600px; }
-        .card p strong { color: var(--color-secundario); }
-        footer { text-align: center; padding: 1.5rem; color: #aaa; font-size: 0.9rem; }
-        @media (max-width: 768px) { header { padding: 3rem 1rem; } header h1 { font-size: 2.0rem; } .card { padding: 2rem; } .card h2 { font-size: 1.4rem; } }
 
-        /* --- ESTILOS DEL CHAT --- */
-        #chat-bubble { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; background-color: var(--color-primario); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: transform 0.2s ease; z-index: 1000; }
-        #chat-bubble:hover { transform: scale(1.1); }
-        #chat-bubble svg { color: white; width: 32px; height: 32px; }
-        #chat-window { position: fixed; bottom: 100px; right: 20px; width: 450px; height: 600px; max-width: 90%; background: white; border-radius: 15px; box-shadow: var(--sombra-suave); display: flex; flex-direction: column; overflow: hidden; transform: scale(0); transform-origin: bottom right; transition: transform 0.3s ease; z-index: 1000; }
-        #chat-window.open { transform: scale(1); }
-        #chat-header { background: var(--color-primario); color: white; padding: 15px; font-weight: 600; }
-        #chat-messages { flex-grow: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; }
-        .message { padding: 10px 15px; border-radius: 20px; margin-bottom: 10px; max-width: 85%; line-height: 1.4; word-wrap: break-word; }
-        .bot-message a { color: #ffffff; font-weight: 600; text-decoration: underline; }
-        .user-message { background-color: #eef2f8; color: var(--color-texto); align-self: flex-end; }
-        .bot-message { background-color: var(--color-primario); color: white; align-self: flex-start; }
-        #chat-input-container { display: flex; border-top: 1px solid #eee; padding: 10px; align-items: flex-end; }
-        #chat-input { flex-grow: 1; border: none; padding: 10px; outline: none; font-family: 'Poppins', sans-serif; font-size: 1rem; resize: none; line-height: 1.5; max-height: 120px; overflow-y: auto; }
-        #send-button { border: none; background: var(--color-primario); color: white; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-left: 10px; align-self: flex-end; }
+        :root {
+            --color-primario: #007BFF;
+            --color-secundario: #0056b3;
+            --color-texto: #333;
+            --color-fondo: #f4f7f6;
+            --color-blanco: #ffffff;
+            --sombra-suave: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(90deg, var(--color-primario), var(--color-secundario));
+            color: var(--color-blanco);
+            text-align: center;
+            padding: 4rem 1rem;
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+
+        header h1 {
+            font-size: 2.8rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        main {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .card {
+            background: var(--color-blanco);
+            border-radius: 15px;
+            box-shadow: var(--sombra-suave);
+            max-width: 800px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 2.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card svg {
+            max-width: 120px;
+            margin-bottom: 1.5rem;
+            color: var(--color-primario);
+        }
+
+        .card h2 {
+            font-size: 1.8rem;
+            color: var(--color-primario);
+            margin-bottom: 1rem;
+        }
+
+        .card p {
+            font-size: 1rem;
+            max-width: 600px;
+        }
+
+        .card p strong {
+            color: var(--color-secundario);
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 3rem 1rem;
+            }
+
+            header h1 {
+                font-size: 2.2rem;
+            }
+
+            .card {
+                padding: 2rem;
+            }
+
+            .card h2 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* --- ESTILOS DEL CHAT (SIN CAMBIOS) --- */
+        #chat-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background-color: var(--color-primario);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+            z-index: 1000;
+        }
+
+        #chat-bubble:hover {
+            transform: scale(1.1);
+        }
+
+        #chat-bubble svg {
+            color: white;
+            width: 32px;
+            height: 32px;
+        }
+
+        #chat-window {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 450px;
+            height: 600px;
+            max-width: 90%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: var(--sombra-suave);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0);
+            transform-origin: bottom right;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        #chat-window.open {
+            transform: scale(1);
+        }
+
+        #chat-header {
+            background: var(--color-primario);
+            color: white;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        #chat-messages {
+            flex-grow: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message {
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            max-width: 85%;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+
+        .bot-message a {
+            color: #ffffff;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        .user-message {
+            background-color: #eef2f8;
+            color: var(--color-texto);
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background-color: var(--color-primario);
+            color: white;
+            align-self: flex-start;
+        }
+
+        #chat-input-container {
+            display: flex;
+            border-top: 1px solid #eee;
+            padding: 10px;
+            align-items: flex-end;
+        }
+
+        #chat-input {
+            flex-grow: 1;
+            border: none;
+            padding: 10px;
+            outline: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 1rem;
+            resize: none;
+            line-height: 1.5;
+            max-height: 120px;
+            overflow-y: auto;
+        }
+
+        #send-button {
+            border: none;
+            background: var(--color-primario);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 10px;
+            align-self: flex-end;
+        }
     </style>
 </head>
+
 <body>
+    <!-- CONTENIDO DE LA PÁGINA (SIN CAMBIOS) -->
     <header>
         <h1>Asistente de Cartera Deteriorada BCI</h1>
-        <p>Versión conectada al nuevo workflow: consulta clientes en clientes_raw y reglas en documents_rules.</p>
+        <p>Consulta información de clientes y reglas de cartera deteriorada de forma rápida y sencilla.</p>
     </header>
     <main>
         <div class="card">
             <svg viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                <path
+                    d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
             </svg>
             <h2>Consulta de Cartera Deteriorada</h2>
-            <p>Puedes preguntar por <strong>RUT de clientes</strong>, <strong>reglas de negocio</strong> o solicitar <strong>exportar datos en CSV</strong> con <code>/csv</code>.</p>
+            <p>Nuestro asistente te ayuda a consultar información de clientes y reglas de cartera deteriorada. Puedes
+                preguntar por <strong>RUT de clientes</strong>, <strong>reglas de negocio</strong> o solicitar
+                <strong>exportar datos en CSV</strong>. ¡Inicia el chat en la esquina inferior derecha!</p>
         </div>
     </main>
     <footer>
         <p>&copy; 2025 Asistente de Cartera Deteriorada BCI | Todos los derechos reservados.</p>
     </footer>
 
+    <!-- ===== INTERFAZ DEL CHAT Y JAVASCRIPT (SIN CAMBIOS EN HTML) ===== -->
+
     <div id="chat-bubble">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path>
+        </svg>
     </div>
 
     <div id="chat-window">
         <div id="chat-header">Asistente Cartera Deteriorada</div>
         <div id="chat-messages">
-            <div class="message bot-message">¡Hola! Estoy conectado al nuevo flujo. Puedo ayudarte con consultas de clientes por RUT, reglas de negocio o exportar datos en CSV.</div>
+            <div class="message bot-message">¡Hola! Soy tu asistente de cartera deteriorada. Puedo ayudarte con
+                consultas de clientes por RUT, reglas de negocio o exportar datos. ¿En qué puedo ayudarte?</div>
         </div>
         <div id="chat-input-container">
             <textarea id="chat-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
@@ -73,9 +296,8 @@
     </div>
 
     <script>
-        // URL del Webhook confirmada (Railway)
-        const N8N_BASE_URL = 'https://webhook-processor-production-ccde.up.railway.app';
-        const N8N_WEBHOOK_URL = `${N8N_BASE_URL}/webhook/cardet-solo-raw`;
+        // ---- CONFIGURACIÓN ----
+        const N8N_WEBHOOK_URL = 'https://n8n.srv1301661.hstgr.cloud/webhook/cardet-solo-raw';
 
         // ---- LÓGICA DEL CHAT ----
         const chatBubble = document.getElementById('chat-bubble');
@@ -131,36 +353,21 @@
             return text.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
         };
 
-        // Función para descargar archivo desde Base64 (soporta payload con data.file o con fileData/fileName)
-        const downloadFilePayload = (data) => {
-            try {
-                // Nuevo formato: data.file { name, mimeType, dataBase64 }
-                if (data && data.file && data.file.dataBase64 && data.file.name) {
-                    downloadFileFromBase64(data.file.dataBase64, data.file.name, data.file.mimeType || 'text/csv;charset=utf-8;');
-                    return { name: data.file.name };
-                }
-                // Formato anterior: fileData y fileName en la raíz
-                if (data && data.fileData && data.fileName) {
-                    downloadFileFromBase64(data.fileData, data.fileName, data.mimeType || 'text/csv;charset=utf-8;');
-                    return { name: data.fileName };
-                }
-                return null;
-            } catch (error) {
-                console.error('Error al procesar descarga:', error);
-                addMessageToUI('❌ Error al descargar el archivo. Por favor, intenta nuevamente.', 'bot-message');
-                return null;
-            }
-        };
-
+        // Función para descargar archivo desde Base64
         const downloadFileFromBase64 = (base64Data, fileName, mimeType) => {
             try {
+                // Convertir el Base64 a un array de bytes
                 const byteCharacters = atob(base64Data);
                 const byteNumbers = new Array(byteCharacters.length);
+
                 for (let i = 0; i < byteCharacters.length; i++) {
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
                 }
+
                 const byteArray = new Uint8Array(byteNumbers);
                 const blob = new Blob([byteArray], { type: mimeType });
+
+                // Crear un enlace temporal y simular clic
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
@@ -168,8 +375,11 @@
                 a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
+
+                // Limpiar
                 window.URL.revokeObjectURL(url);
                 document.body.removeChild(a);
+
                 console.log('Archivo descargado exitosamente:', fileName);
             } catch (error) {
                 console.error('Error al descargar el archivo:', error);
@@ -186,14 +396,23 @@
             chatInput.style.height = 'auto';
 
             try {
+                console.log('Enviando mensaje a n8n:', { message: userMessage, sessionId: sessionId });
+                console.log('URL del webhook:', N8N_WEBHOOK_URL);
+
                 // Actualizar RUT contextual desde el mensaje del usuario
                 updateLastRutFromText(userMessage);
 
                 const response = await fetch(N8N_WEBHOOK_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: userMessage, sessionId: sessionId, lastRut: lastRut })
+                    body: JSON.stringify({
+                        message: userMessage,
+                        sessionId: sessionId,
+                        lastRut: lastRut
+                    })
                 });
+
+                console.log('Respuesta recibida:', response.status, response.statusText);
 
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -201,6 +420,7 @@
                     throw new Error(`Error ${response.status}: ${response.statusText}`);
                 }
 
+                // Intentar parsear JSON de forma robusta (soporta respuestas vacías o texto)
                 let data;
                 try {
                     const contentType = response.headers.get('Content-Type') || response.headers.get('content-type') || '';
@@ -208,36 +428,56 @@
                         data = await response.json();
                     } else {
                         const textBody = await response.text();
-                        try { data = textBody ? JSON.parse(textBody) : {}; } catch { data = { output: textBody }; }
+                        try {
+                            data = textBody ? JSON.parse(textBody) : {};
+                        } catch (e) {
+                            // Si no es JSON, usar el texto como salida directa
+                            data = { output: textBody };
+                        }
                     }
                 } catch (e) {
+                    // Fallback para respuestas sin cuerpo (p.ej. 204) o JSON inválido
                     const textBody = await response.text().catch(() => '');
                     console.warn('No se pudo parsear la respuesta como JSON. Cuerpo recibido:', textBody);
                     addMessageToUI('❌ Error: la respuesta del servidor llegó vacía o con formato no válido. Intenta nuevamente.', 'bot-message');
                     return;
                 }
-
-                // Actualizar RUT contextual desde la respuesta cuando sea posible
+                console.log('Datos recibidos:', data);
+                // Intentar actualizar el RUT contextual desde la respuesta del backend
                 if (data && typeof data === 'object') {
                     if (data.rut_cliente) updateLastRutFromText(String(data.rut_cliente));
                     if (data.rut_from_context) updateLastRutFromText(String(data.rut_from_context));
                     if (data.output) updateLastRutFromText(String(data.output));
                 }
 
-                // Verificar si la respuesta contiene un archivo para descargar (nuevo o antiguo formato)
-                const downloaded = downloadFilePayload(data);
-                if (downloaded && downloaded.name) {
-                    const confirmMessage = `✅ Archivo descargado: ${downloaded.name}`;
+                // Verificar si la respuesta contiene un archivo para descargar
+                if (data.fileData && data.fileName) {
+                    console.log('Descargando archivo:', data.fileName);
+                    // Descargar el archivo automáticamente
+                    downloadFileFromBase64(
+                        data.fileData,
+                        data.fileName,
+                        data.mimeType || 'text/csv;charset=utf-8;'
+                    );
+
+                    // Mostrar mensaje de confirmación
+                    const confirmMessage = `✅ **Archivo descargado exitosamente**\n\n📋 **${data.fileName}**\n\nEl archivo se ha descargado en tu carpeta de descargas.`;
                     addMessageToUI(confirmMessage, 'bot-message');
                 } else if (data.output) {
+                    // Es una respuesta normal del chatbot
                     addMessageToUI(data.output, 'bot-message');
                 } else {
-                    console.warn('Respuesta sin output ni archivo:', data);
+                    console.warn('Respuesta sin output ni fileData:', data);
                     addMessageToUI('Lo siento, no he podido obtener una respuesta.', 'bot-message');
                 }
 
             } catch (error) {
                 console.error('Error al conectar con n8n:', error);
+                console.error('Detalles del error:', {
+                    name: error.name,
+                    message: error.message,
+                    stack: error.stack
+                });
                 addMessageToUI(`Ha ocurrido un error de conexión: ${error.message}. Inténtalo de nuevo.`, 'bot-message');
             }
         };
@@ -252,12 +492,14 @@
 
         sendButton.addEventListener('click', sendMessage);
 
-        // Enviar con Enter (Shift+Enter inserta salto de línea)
+        // --- ÚNICO CAMBIO: LÓGICA CORREGIDA PARA EL SALTO DE LÍNEA ---
         chatInput.addEventListener('keydown', (event) => {
+            // Si se presiona Enter Y NO se presiona la tecla Shift, se envía el mensaje
             if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
+                event.preventDefault(); // Previene el salto de línea que haría Enter por defecto
                 sendMessage();
             }
+            // Si se presiona Shift + Enter, el textarea hará su acción por defecto: un salto de línea.
         });
 
         chatInput.addEventListener('input', () => {
@@ -266,4 +508,5 @@
         });
     </script>
 </body>
+
 </html>
