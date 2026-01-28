@@ -268,7 +268,8 @@
             <h2>Consulta de Cartera Deteriorada</h2>
             <p>Nuestro asistente te ayuda a consultar información de clientes y reglas de cartera deteriorada. Puedes
                 preguntar por <strong>RUT de clientes</strong>, <strong>reglas de negocio</strong> o solicitar
-                <strong>exportar datos en CSV</strong>. ¡Inicia el chat en la esquina inferior derecha!</p>
+                <strong>exportar datos en CSV</strong>. ¡Inicia el chat en la esquina inferior derecha!
+            </p>
         </div>
     </main>
     <footer>
@@ -317,7 +318,7 @@
         const sessionId = getSessionId();
 
         // ---- Gestión de RUT en el frontend (contexto) ----
-        const RUT_REGEX = /\b(\d{1,2}\.?\d{3}\.?\d{3}[-]?[0-9kK])\b/g;
+        const RUT_REGEX = /\b(\d{1,2}\.?\d{3}\.?\d{3}[-]?[0-9kK]?)\b/g;
 
         const normalizeRut = (r) => {
             if (!r || typeof r !== 'string') return '';
@@ -337,7 +338,7 @@
         let lastRut = localStorage.getItem('lastRut') || '';
         const updateLastRutFromText = (text) => {
             const rut = extractRut(text || '');
-            if (rut && rut.length >= 8) {
+            if (rut && rut.length >= 7) {
                 lastRut = rut;
                 localStorage.setItem('lastRut', lastRut);
                 console.log('RUT contextual actualizado:', lastRut);
